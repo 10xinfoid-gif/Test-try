@@ -268,16 +268,6 @@
 
   <div id="results"></div>
 
-  <div id="confirmOverlay" style="display:none; position:fixed; inset:0; z-index:300; background:rgba(17,24,39,.6); align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:14px; padding:22px; max-width:320px; width:88%; text-align:center;">
-      <div style="font-size:16px; font-weight:600; margin-bottom:18px; color:#1f2937;">আপনি কি টেস্ট সাবমিট করতে চান?</div>
-      <div style="display:flex; gap:10px;">
-        <button id="confirmNoBtn" style="flex:1; padding:11px; border:1px solid #d1d5db; background:#fff; color:#374151; border-radius:8px; font-size:14px; font-weight:600;">না</button>
-        <button id="confirmYesBtn" style="flex:1; padding:11px; border:none; background:#16a34a; color:#fff; border-radius:8px; font-size:14px; font-weight:600;">হ্যাঁ, সাবমিট করুন</button>
-      </div>
-    </div>
-  </div>
-
   <button id="fabHistory" title="ইতিহাস দেখুন">📊</button>
   <div id="historyOverlay">
     <div id="historyModal">
@@ -513,26 +503,8 @@ function render() {
 }
 
 document.getElementById('submitBtn').addEventListener('click', () => {
-  customConfirm('আপনি কি টেস্ট সাবমিট করতে চান?', () => finishTest(false));
+  finishTest(false);
 });
-
-// reusable custom confirm (native confirm() is unreliable inside installed/standalone PWAs on Android)
-function customConfirm(message, onYes) {
-  const overlay = document.getElementById('confirmOverlay');
-  overlay.querySelector('div > div').textContent = message;
-  const yesBtn = document.getElementById('confirmYesBtn');
-  const noBtn = document.getElementById('confirmNoBtn');
-  overlay.style.display = 'flex';
-  const cleanup = () => {
-    overlay.style.display = 'none';
-    yesBtn.removeEventListener('click', onYesHandler);
-    noBtn.removeEventListener('click', onNoHandler);
-  };
-  const onYesHandler = () => { cleanup(); onYes(); };
-  const onNoHandler = () => { cleanup(); };
-  yesBtn.addEventListener('click', onYesHandler);
-  noBtn.addEventListener('click', onNoHandler);
-}
 document.getElementById('prevBtn').addEventListener('click', () => { if(current>0){current--; render();} });
 document.getElementById('nextBtn').addEventListener('click', () => { if(current<QUESTIONS.length-1){current++; render();} });
 document.getElementById('navGridToggle').addEventListener('click', () => {
@@ -690,7 +662,7 @@ function renderAttemptsTab(contentEl) {
   html += '<button id="clearHistBtn" style="margin-top:6px;background:#fee2e2;color:#b91c1c;border:none;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;width:100%;">🗑️ টেস্ট ইতিহাস মুছুন</button>';
   contentEl.innerHTML = html;
   document.getElementById('clearHistBtn').addEventListener('click', () => {
-    customConfirm('সব টেস্ট ইতিহাস মুছে ফেলতে চান?', () => { localStorage.removeItem(HISTORY_KEY); renderAttemptsTab(contentEl); });
+    localStorage.removeItem(HISTORY_KEY); renderAttemptsTab(contentEl);
   });
 }
 
@@ -764,12 +736,10 @@ function renderStatsForTest(subjectIdx, testIdx) {
   html += '<button id="clearStatsBtn" style="margin-top:6px;background:#fee2e2;color:#b91c1c;border:none;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;width:100%;">🗑️ এই টেস্টের পরিসংখ্যান মুছুন</button>';
   body.innerHTML = html;
   document.getElementById('clearStatsBtn').addEventListener('click', () => {
-    customConfirm('এই টেস্টের সব পরিসংখ্যান মুছে ফেলতে চান?', () => {
-      const stats = getQuestionStats();
-      testQuestions.forEach((q, i) => { delete stats[statKey(subjectIdx, testIdx, i)]; });
-      localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-      renderStatsForTest(subjectIdx, testIdx);
-    });
+    const stats = getQuestionStats();
+    testQuestions.forEach((q, i) => { delete stats[statKey(subjectIdx, testIdx, i)]; });
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+    renderStatsForTest(subjectIdx, testIdx);
   });
 }
 
